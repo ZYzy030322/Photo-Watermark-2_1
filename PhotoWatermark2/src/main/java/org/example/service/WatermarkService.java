@@ -37,6 +37,12 @@ public class WatermarkService {
 
         // 将Image转换为BufferedImage以便处理
         BufferedImage bufferedImage = toBufferedImage(originalImage);
+        
+        // 如果启用了尺寸调整，则先调整图片尺寸
+        if (config.isResizeEnabled()) {
+            bufferedImage = resizeImage(bufferedImage, config);
+        }
+        
         int width = bufferedImage.getWidth();
         int height = bufferedImage.getHeight();
 
@@ -359,5 +365,44 @@ public class WatermarkService {
         g2d.dispose();
 
         return bufferedImage;
+    }
+
+    /**
+     * 调整图片尺寸
+     * @param originalImage 原始图片
+     * @param config 配置参数
+     * @return 调整尺寸后的图片
+     */
+    private BufferedImage resizeImage(BufferedImage originalImage, WatermarkConfig config) {
+        int targetWidth, targetHeight;
+        
+        if (config.getResizeWidth() > 0 && config.getResizeHeight() > 0) {
+            // 按指定宽高调整
+            targetWidth = (int) config.getResizeWidth();
+            targetHeight = (int) config.getResizeHeight();
+        } else {
+            // 按比例调整
+            int originalWidth = originalImage.getWidth();
+            int originalHeight = originalImage.getHeight();
+            double percentage = config.getResizePercentage() / 100.0;
+            
+            targetWidth = (int) (originalWidth * percentage);
+            targetHeight = (int) (originalHeight * percentage);
+        }
+        
+        // 确保目标尺寸有效
+        if (targetWidth <= 0) targetWidth = 1;
+        if (targetHeight <= 0) targetHeight = 1;
+        
+        // 创建调整尺寸后的图片
+        Image scaledImage = originalImage.getScaledInstance(targetWidth, targetHeight, Image.SCALE_SMOOTH);
+        
+        // 转换为BufferedImage并返回
+        BufferedImage resizedImage = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = resizedImage.createGraphics();
+        g2d.drawImage(scaledImage, 0, 0, null);
+        g2d.dispose();
+        
+        return resizedImage;
     }
 }

@@ -62,6 +62,16 @@ public class MainFrame extends JFrame {
     private JButton exportButton;
     private JButton selectOutputFolderButton;
     private JLabel outputFolderLabel;
+    
+    // 新增尺寸调整相关组件
+    private JCheckBox resizeCheckBox;
+    private JRadioButton widthHeightRadio;
+    private JRadioButton percentageRadio;
+    private ButtonGroup resizeGroup;
+    private JTextField widthField;
+    private JTextField heightField;
+    private JSlider percentageSlider;
+    private JLabel percentageLabel;
 
     // 数据
     private WatermarkConfig config;
@@ -179,6 +189,18 @@ public class MainFrame extends JFrame {
         // 选择输出文件夹按钮和标签
         selectOutputFolderButton = new JButton("选择输出文件夹");
         outputFolderLabel = new JLabel("未选择输出文件夹");
+        
+        // 新增尺寸调整相关组件
+        resizeCheckBox = new JCheckBox("调整尺寸");
+        widthHeightRadio = new JRadioButton("指定宽高", true);
+        percentageRadio = new JRadioButton("按比例调整");
+        resizeGroup = new ButtonGroup();
+        resizeGroup.add(widthHeightRadio);
+        resizeGroup.add(percentageRadio);
+        widthField = new JTextField("800");
+        heightField = new JTextField("600");
+        percentageSlider = new JSlider(1, 200, 100);
+        percentageLabel = new JLabel("100%");
     }
 
     /**
@@ -267,6 +289,9 @@ public class MainFrame extends JFrame {
         colorButton.addActionListener(e -> handleSelectColorAction());
         selectImageButton.addActionListener(e -> handleSelectWatermarkImageAction());
         deleteImageButton.addActionListener(e -> handleDeleteImageAction()); // 添加删除按钮事件监听器
+    
+        // 初始化尺寸调整控件状态
+        updateResizeControls();
     }
 
     /**
@@ -501,10 +526,63 @@ public class MainFrame extends JFrame {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
         panel.add(suffixTextField, gbc);
+        
+        // 尺寸调整复选框
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        panel.add(resizeCheckBox, gbc);
+        
+        // 尺寸调整单选按钮
+        JPanel resizeRadioPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        resizeRadioPanel.add(widthHeightRadio);
+        resizeRadioPanel.add(percentageRadio);
+        gbc.gridx = 1;
+        gbc.gridy = 5;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        panel.add(resizeRadioPanel, gbc);
+        
+        // 宽度标签和文本框
+        gbc.gridx = 0;
+        gbc.gridy = 6;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        panel.add(new JLabel("宽度:"), gbc);
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        panel.add(widthField, gbc);
+        
+        // 高度标签和文本框
+        gbc.gridx = 0;
+        gbc.gridy = 7;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        panel.add(new JLabel("高度:"), gbc);
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        panel.add(heightField, gbc);
+        
+        // 按比例调整标签、滑块和值标签
+        gbc.gridx = 0;
+        gbc.gridy = 8;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        panel.add(new JLabel("比例:"), gbc);
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        panel.add(percentageSlider, gbc);
+        gbc.gridx = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        panel.add(percentageLabel, gbc);
 
         // 输出文件夹选择按钮和标签
         gbc.gridx = 0;
-        gbc.gridy = 5;
+        gbc.gridy = 9;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0;
         panel.add(selectOutputFolderButton, gbc);
@@ -515,7 +593,7 @@ public class MainFrame extends JFrame {
 
         // 导出按钮
         gbc.gridx = 0;
-        gbc.gridy = 6;
+        gbc.gridy = 10;
         gbc.gridwidth = 3;
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.CENTER;
@@ -578,6 +656,10 @@ public class MainFrame extends JFrame {
             jpegQualityLabel.setText(String.valueOf(jpegQualitySlider.getValue()));
             updatePreview();
         });
+        percentageSlider.addChangeListener(e -> {
+            percentageLabel.setText(percentageSlider.getValue() + "%");
+            updatePreview();
+        });
 
         // 文本框内容变化事件 - 实时更新预览
         textWatermarkField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
@@ -599,6 +681,33 @@ public class MainFrame extends JFrame {
         italicCheckBox.addActionListener(e -> updatePreview());
         colorButton.addActionListener(e -> updatePreview());
         positionComboBox.addActionListener(e -> updatePreview());
+        
+        // 尺寸调整相关事件
+        resizeCheckBox.addActionListener(e -> updateResizeControls());
+        widthHeightRadio.addActionListener(e -> updateResizeControls());
+        percentageRadio.addActionListener(e -> updateResizeControls());
+        widthField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            public void changedUpdate(javax.swing.event.DocumentEvent e) {
+                updatePreview();
+            }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) {
+                updatePreview();
+            }
+            public void insertUpdate(javax.swing.event.DocumentEvent e) {
+                updatePreview();
+            }
+        });
+        heightField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            public void changedUpdate(javax.swing.event.DocumentEvent e) {
+                updatePreview();
+            }
+            public void removeUpdate(javax.swing.event.DocumentEvent e) {
+                updatePreview();
+            }
+            public void insertUpdate(javax.swing.event.DocumentEvent e) {
+                updatePreview();
+            }
+        });
 
         // 添加鼠标右键菜单以删除图片
         imageList.addMouseListener(new MouseAdapter() {
@@ -851,6 +960,23 @@ public class MainFrame extends JFrame {
         config.setNamingConvention((String) namingConventionComboBox.getSelectedItem());
         config.setPrefix(prefixTextField.getText());
         config.setSuffix(suffixTextField.getText());
+        
+        // 更新尺寸调整配置
+        config.setResizeEnabled(resizeCheckBox.isSelected());
+        if (widthHeightRadio.isSelected()) {
+            try {
+                config.setResizeWidth(Double.parseDouble(widthField.getText()));
+            } catch (NumberFormatException e) {
+                config.setResizeWidth(800); // 默认值
+            }
+            try {
+                config.setResizeHeight(Double.parseDouble(heightField.getText()));
+            } catch (NumberFormatException e) {
+                config.setResizeHeight(600); // 默认值
+            }
+        } else {
+            config.setResizePercentage(percentageSlider.getValue());
+        }
     }
 
     /**
@@ -1033,6 +1159,17 @@ public class MainFrame extends JFrame {
         } catch (TooManyListenersException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * 更新尺寸调整控件状态
+     */
+    private void updateResizeControls() {
+        boolean resizeEnabled = resizeCheckBox.isSelected();
+        widthField.setEnabled(resizeEnabled && widthHeightRadio.isSelected());
+        heightField.setEnabled(resizeEnabled && widthHeightRadio.isSelected());
+        percentageSlider.setEnabled(resizeEnabled && percentageRadio.isSelected());
+        percentageLabel.setEnabled(resizeEnabled && percentageRadio.isSelected());
     }
 
     /**
