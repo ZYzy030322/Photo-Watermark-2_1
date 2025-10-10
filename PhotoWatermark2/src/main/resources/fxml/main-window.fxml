@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.controller.MainController">
+    <MenuBar>
+        <Menu text="文件">
+            <MenuItem onAction="#handleImportImagesAction" text="导入图片" />
+            <MenuItem onAction="#handleImportFolderAction" text="导入文件夹" />
+        </Menu>
+    </MenuBar>
+
+    <SplitPane dividerPositions="0.3" VBox.vgrow="ALWAYS">
+        <!-- 左侧面板：图片列表 -->
+        <VBox>
+            <Label text="图片列表">
+                <VBox.margin>
+                    <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                </VBox.margin>
+            </Label>
+            <ListView fx:id="imageListView" VBox.vgrow="ALWAYS" />
+        </VBox>
+
+        <!-- 右侧面板：预览和设置 -->
+        <SplitPane dividerPositions="0.6" orientation="VERTICAL">
+            <!-- 上方面板：预览区 -->
+            <AnchorPane>
+                <ImageView fx:id="previewImageView" pickOnBounds="true" preserveRatio="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+            </AnchorPane>
+
+            <!-- 下方面板：设置区 -->
+            <TabPane tabClosingPolicy="UNAVAILABLE">
+                <Tab text="水印设置">
+                    <ScrollPane>
+                        <VBox spacing="10.0">
+                            <padding>
+                                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                            </padding>
+
+                            <!-- 水印类型选择 -->
+                            <TitledPane animated="false" text="水印类型">
+                                <VBox spacing="5.0">
+                                    <RadioButton fx:id="textWatermarkRadio" mnemonicParsing="false" selected="true" text="文本水印">
+                                        <toggleGroup>
+                                            <ToggleGroup fx:id="watermarkTypeGroup" />
+                                        </toggleGroup>
+                                    </RadioButton>
+                                    <RadioButton fx:id="imageWatermarkRadio" mnemonicParsing="false" text="图片水印" toggleGroup="$watermarkTypeGroup" />
+                                </VBox>
+                            </TitledPane>
+
+                            <!-- 文本水印设置 -->
+                            <TitledPane animated="false" text="文本水印设置">
+                                <VBox spacing="5.0">
+                                    <Label text="水印文本:" />
+                                    <TextField fx:id="textWatermarkField" promptText="输入水印文本" />
+
+                                    <Label text="字体:" />
+                                    <HBox spacing="5.0">
+                                        <ComboBox fx:id="fontComboBox" prefWidth="150.0" />
+                                        <Spinner fx:id="fontSizeSpinner" prefWidth="80.0" />
+                                        <CheckBox fx:id="boldCheckBox" mnemonicParsing="false" text="粗体" />
+                                        <CheckBox fx:id="italicCheckBox" mnemonicParsing="false" text="斜体" />
+                                    </HBox>
+
+                                    <Label text="颜色和透明度:" />
+                                    <HBox spacing="5.0">
+                                        <ColorPicker fx:id="colorPicker" />
+                                        <Slider fx:id="opacitySlider" max="100.0" value="100.0" HBox.hgrow="ALWAYS" />
+                                        <Label fx:id="opacityLabel" text="100%" />
+                                    </HBox>
+                                </VBox>
+                            </TitledPane>
+
+                            <!-- 图片水印设置 -->
+                            <TitledPane animated="false" text="图片水印设置">
+                                <VBox spacing="5.0">
+                                    <Button fx:id="selectImageButton" mnemonicParsing="false" onAction="#handleSelectWatermarkImageAction" text="选择图片" />
+                                    <Label fx:id="selectedImageLabel" text="未选择图片" />
+
+                                    <Label text="缩放:" />
+                                    <HBox spacing="5.0">
+                                        <Slider fx:id="imageScaleSlider" max="200.0" value="100.0" HBox.hgrow="ALWAYS" />
+                                        <Label fx:id="imageScaleLabel" text="100%" />
+                                    </HBox>
+
+                                    <Label text="透明度:" />
+                                    <HBox spacing="5.0">
+                                        <Slider fx:id="imageOpacitySlider" max="100.0" value="100.0" HBox.hgrow="ALWAYS" />
+                                        <Label fx:id="imageOpacityLabel" text="100%" />
+                                    </HBox>
+                                </VBox>
+                            </TitledPane>
+
+                            <!-- 位置和旋转设置 -->
+                            <TitledPane animated="false" text="位置和旋转">
+                                <VBox spacing="5.0">
+                                    <Label text="预设位置:" />
+                                    <ComboBox fx:id="positionComboBox" prefWidth="200.0" />
+
+                                    <Label text="旋转角度:" />
+                                    <HBox spacing="5.0">
+                                        <Slider fx:id="rotationSlider" max="360.0" HBox.hgrow="ALWAYS" />
+                                        <Label fx:id="rotationLabel" text="0°" />
+                                    </HBox>
+                                </VBox>
+                            </TitledPane>
+
+                            <Button mnemonicParsing="false" onAction="#handleApplyWatermarkAction" text="应用水印" />
+                        </VBox>
+                    </ScrollPane>
+                </Tab>
+
+                <Tab text="导出设置">
+                    <ScrollPane>
+                        <VBox spacing="10.0">
+                            <padding>
+                                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                            </padding>
+
+                            <TitledPane animated="false" text="输出格式">
+                                <VBox spacing="5.0">
+                                    <Label text="格式:" />
+                                    <ComboBox fx:id="exportFormatComboBox" prefWidth="150.0" />
+
+                                    <Label text="JPEG质量:" />
+                                    <HBox spacing="5.0">
+                                        <Slider fx:id="jpegQualitySlider" max="100.0" min="1.0" value="90.0" HBox.hgrow="ALWAYS" />
+                                        <Label fx:id="jpegQualityLabel" text="90" />
+                                    </HBox>
+                                </VBox>
+                            </TitledPane>
+
+                            <TitledPane animated="false" text="文件命名">
+                                <VBox spacing="5.0">
+                                    <Label text="命名规则:" />
+                                    <ComboBox fx:id="namingConventionComboBox" prefWidth="150.0" />
+
+                                    <Label text="前缀:" />
+                                    <TextField fx:id="prefixTextField" disable="true" promptText="前缀" />
+
+                                    <Label text="后缀:" />
+                                    <TextField fx:id="suffixTextField" disable="true" promptText="后缀" />
+                                </VBox>
+                            </TitledPane>
+
+                            <TitledPane animated="false" text="输出目录">
+                                <VBox spacing="5.0">
+                                    <Button fx:id="selectOutputFolderButton" mnemonicParsing="false" onAction="#handleSelectOutputFolderAction" text="选择输出文件夹" />
+                                    <Label fx:id="outputFolderLabel" text="未选择输出文件夹" />
+                                </VBox>
+                            </TitledPane>
+
+                            <Button fx:id="exportButton" disable="true" mnemonicParsing="false" onAction="#handleExportAction" text="导出图片" />
+                        </VBox>
+                    </ScrollPane>
+                </Tab>
+            </TabPane>
+        </SplitPane>
+    </SplitPane>
+</VBox>
