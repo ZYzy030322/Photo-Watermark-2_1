@@ -129,3 +129,4 @@ java -jar target/PhotoWatermark2-1.0-SNAPSHOT-shaded.jar
 - [ ] 更多高级功能（阴影、描边等）
 - [ ] 国际化支持
 
+
