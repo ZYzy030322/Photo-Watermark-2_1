@@ -4,8 +4,8 @@ import org.example.model.ImageData;
 import org.example.model.WatermarkConfig;
 import org.example.service.PreviewService;
 import org.example.service.WatermarkService;
+import org.example.service.TemplateService;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -72,21 +72,29 @@ public class MainFrame extends JFrame {
     private JTextField heightField;
     private JSlider percentageSlider;
     private JLabel percentageLabel;
+    
+    // 模板管理组件
+    private JButton saveTemplateButton;
+    private JButton loadTemplateButton;
+    private JButton manageTemplatesButton;
 
     // 数据
     private WatermarkConfig config;
     private WatermarkService watermarkService;
     private PreviewService previewService; // 新增预览服务
+    private TemplateService templateService; // 模板服务
     private File outputFolder;
 
     public MainFrame() {
         config = new WatermarkConfig();
         watermarkService = new WatermarkService();
         previewService = new PreviewService(); // 初始化预览服务
+        templateService = new TemplateService(); // 初始化模板服务
         initializeComponents();
         setupLayout();
         setupEventHandlers();
         setupDragAndDrop();
+        loadLastConfig(); // 启动时加载上次配置
         setTitle("照片水印工具");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1200, 800);
@@ -201,6 +209,16 @@ public class MainFrame extends JFrame {
         heightField = new JTextField("600");
         percentageSlider = new JSlider(1, 200, 100);
         percentageLabel = new JLabel("100%");
+        
+        // 模板管理组件
+        saveTemplateButton = new JButton("保存模板");
+        loadTemplateButton = new JButton("加载模板");
+        manageTemplatesButton = new JButton("管理模板");
+        
+        // 模板管理组件
+        saveTemplateButton = new JButton("保存模板");
+        loadTemplateButton = new JButton("加载模板");
+        manageTemplatesButton = new JButton("管理模板");
     }
 
     /**
@@ -271,6 +289,14 @@ public class MainFrame extends JFrame {
         JPanel exportPanel = createExportPanel();
         tabbedPane.addTab("导出设置", exportPanel);
 
+        // 添加模板按钮面板
+        JPanel templatePanel = new JPanel(new FlowLayout());
+        templatePanel.setBorder(BorderFactory.createTitledBorder("模板管理"));
+        templatePanel.add(saveTemplateButton);
+        templatePanel.add(loadTemplateButton);
+        templatePanel.add(manageTemplatesButton);
+        settingsPanel.add(templatePanel, BorderLayout.SOUTH);
+        
         settingsPanel.add(tabbedPane, BorderLayout.CENTER);
         rightPanel.add(settingsPanel, BorderLayout.SOUTH);
 
@@ -289,6 +315,11 @@ public class MainFrame extends JFrame {
         colorButton.addActionListener(e -> handleSelectColorAction());
         selectImageButton.addActionListener(e -> handleSelectWatermarkImageAction());
         deleteImageButton.addActionListener(e -> handleDeleteImageAction()); // 添加删除按钮事件监听器
+        
+        // 模板管理事件监听器
+        saveTemplateButton.addActionListener(e -> handleSaveTemplateAction());
+        loadTemplateButton.addActionListener(e -> handleLoadTemplateAction());
+        manageTemplatesButton.addActionListener(e -> handleManageTemplatesAction());
     
         // 初始化尺寸调整控件状态
         updateResizeControls();
@@ -1170,6 +1201,260 @@ public class MainFrame extends JFrame {
         heightField.setEnabled(resizeEnabled && widthHeightRadio.isSelected());
         percentageSlider.setEnabled(resizeEnabled && percentageRadio.isSelected());
         percentageLabel.setEnabled(resizeEnabled && percentageRadio.isSelected());
+    }
+    
+    /**
+     * 处理保存模板事件
+     */
+    private void handleSaveTemplateAction() {
+        String templateName = JOptionPane.showInputDialog(this, "请输入模板名称:", "保存模板", JOptionPane.QUESTION_MESSAGE);
+        if (templateName != null && !templateName.trim().isEmpty()) {
+            templateName = templateName.trim();
+            updateConfigFromUI();
+            if (templateService.saveTemplate(config, templateName)) {
+                JOptionPane.showMessageDialog(this, "模板保存成功！", "提示", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, "模板保存失败！", "错误", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+    
+    /**
+     * 处理加载模板事件
+     */
+    private void handleLoadTemplateAction() {
+        List<String> templates = templateService.getAllTemplates();
+        if (templates.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "没有找到任何模板！", "提示", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        
+        String[] templateArray = templates.toArray(new String[0]);
+        String selectedTemplate = (String) JOptionPane.showInputDialog(
+                this,
+                "请选择要加载的模板:",
+                "加载模板",
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                templateArray,
+                templateArray[0]
+        );
+        
+        if (selectedTemplate != null) {
+            WatermarkConfig loadedConfig = templateService.loadTemplate(selectedTemplate);
+            if (loadedConfig != null) {
+                loadConfigToUI(loadedConfig);
+                updatePreview();
+                JOptionPane.showMessageDialog(this, "模板加载成功！", "提示", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, "模板加载失败！", "错误", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+    
+    /**
+     * 处理管理模板事件
+     */
+    private void handleManageTemplatesAction() {
+        List<String> templates = templateService.getAllTemplates();
+        if (templates.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "没有找到任何模板！", "提示", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        
+        JPanel panel = new JPanel(new BorderLayout());
+        DefaultListModel<String> templateListModel = new DefaultListModel<>();
+        for (String template : templates) {
+            templateListModel.addElement(template);
+        }
+        
+        JList<String> templateList = new JList<>(templateListModel);
+        templateList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        JScrollPane scrollPane = new JScrollPane(templateList);
+        panel.add(scrollPane, BorderLayout.CENTER);
+        
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        JButton deleteButton = new JButton("删除");
+        JButton loadButton = new JButton("加载");
+        JButton setDefaultButton = new JButton("设为默认");
+        JButton closeButton = new JButton("关闭");
+        
+        buttonPanel.add(deleteButton);
+        buttonPanel.add(loadButton);
+        buttonPanel.add(setDefaultButton);
+        buttonPanel.add(closeButton);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+        
+        JDialog dialog = new JDialog(this, "模板管理", true);
+        dialog.getContentPane().add(panel);
+        dialog.setSize(400, 300);
+        dialog.setLocationRelativeTo(this);
+        
+        // 删除按钮事件
+        deleteButton.addActionListener(e -> {
+            String selectedTemplate = templateList.getSelectedValue();
+            if (selectedTemplate != null) {
+                int option = JOptionPane.showConfirmDialog(
+                        dialog,
+                        "确定要删除模板 '" + selectedTemplate + "' 吗?",
+                        "确认删除",
+                        JOptionPane.YES_NO_OPTION
+                );
+                if (option == JOptionPane.YES_OPTION) {
+                    if (templateService.deleteTemplate(selectedTemplate)) {
+                        templateListModel.removeElement(selectedTemplate);
+                        JOptionPane.showMessageDialog(dialog, "模板删除成功！", "提示", JOptionPane.INFORMATION_MESSAGE);
+                    } else {
+                        JOptionPane.showMessageDialog(dialog, "模板删除失败！", "错误", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            } else {
+                JOptionPane.showMessageDialog(dialog, "请先选择一个模板！", "提示", JOptionPane.WARNING_MESSAGE);
+            }
+        });
+        
+        // 加载按钮事件
+        loadButton.addActionListener(e -> {
+            String selectedTemplate = templateList.getSelectedValue();
+            if (selectedTemplate != null) {
+                WatermarkConfig loadedConfig = templateService.loadTemplate(selectedTemplate);
+                if (loadedConfig != null) {
+                    loadConfigToUI(loadedConfig);
+                    updatePreview();
+                    dialog.dispose();
+                    JOptionPane.showMessageDialog(this, "模板加载成功！", "提示", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(dialog, "模板加载失败！", "错误", JOptionPane.ERROR_MESSAGE);
+                }
+            } else {
+                JOptionPane.showMessageDialog(dialog, "请先选择一个模板！", "提示", JOptionPane.WARNING_MESSAGE);
+            }
+        });
+        
+        // 设为默认按钮事件
+        setDefaultButton.addActionListener(e -> {
+            String selectedTemplate = templateList.getSelectedValue();
+            if (selectedTemplate != null) {
+                WatermarkConfig loadedConfig = templateService.loadTemplate(selectedTemplate);
+                if (loadedConfig != null) {
+                    templateService.saveAsDefaultTemplate(loadedConfig);
+                    JOptionPane.showMessageDialog(dialog, "默认模板设置成功！", "提示", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(dialog, "无法设置默认模板！", "错误", JOptionPane.ERROR_MESSAGE);
+                }
+            } else {
+                JOptionPane.showMessageDialog(dialog, "请先选择一个模板！", "提示", JOptionPane.WARNING_MESSAGE);
+            }
+        });
+        
+        // 关闭按钮事件
+        closeButton.addActionListener(e -> dialog.dispose());
+        
+        dialog.setVisible(true);
+    }
+    
+    /**
+     * 将配置加载到UI
+     *
+     * @param config 要加载的配置
+     */
+    private void loadConfigToUI(WatermarkConfig config) {
+        // 文本水印设置
+        textWatermarkField.setText(config.getText());
+        fontComboBox.setSelectedItem(config.getFontName());
+        fontSizeSpinner.setValue(config.getFontSize());
+        boldCheckBox.setSelected(config.isBold());
+        italicCheckBox.setSelected(config.isItalic());
+        opacitySlider.setValue((int) config.getOpacity());
+        opacityLabel.setText((int) config.getOpacity() + "%");
+        
+        // 颜色设置
+        String colorHex = config.getColor();
+        if (colorHex != null && colorHex.matches("#([0-9a-fA-F]{6})")) {
+            int r = Integer.parseInt(colorHex.substring(1, 3), 16);
+            int g = Integer.parseInt(colorHex.substring(3, 5), 16);
+            int b = Integer.parseInt(colorHex.substring(5, 7), 16);
+            colorButton.setBackground(new Color(r, g, b));
+        }
+        
+        // 图片水印设置
+        if (config.getImageFile() != null) {
+            selectedImageLabel.setText(config.getImageFile().getName());
+        } else {
+            selectedImageLabel.setText("未选择图片");
+        }
+        imageScaleSlider.setValue((int) config.getImageScale());
+        imageScaleLabel.setText((int) config.getImageScale() + "%");
+        imageOpacitySlider.setValue((int) config.getImageOpacity());
+        imageOpacityLabel.setText((int) config.getImageOpacity() + "%");
+        
+        // 位置设置
+        positionComboBox.setSelectedItem(config.getPosition());
+        rotationSlider.setValue((int) config.getRotation());
+        rotationLabel.setText((int) config.getRotation() + "°");
+        
+        // 导出设置
+        exportFormatComboBox.setSelectedItem(config.getExportFormat());
+        jpegQualitySlider.setValue((int) config.getJpegQuality());
+        jpegQualityLabel.setText(String.valueOf((int) config.getJpegQuality()));
+        namingConventionComboBox.setSelectedItem(config.getNamingConvention());
+        prefixTextField.setText(config.getPrefix());
+        suffixTextField.setText(config.getSuffix());
+        
+        // 尺寸调整设置
+        resizeCheckBox.setSelected(config.isResizeEnabled());
+        if (config.getResizeWidth() > 0) {
+            widthField.setText(String.valueOf(config.getResizeWidth()));
+        }
+        if (config.getResizeHeight() > 0) {
+            heightField.setText(String.valueOf(config.getResizeHeight()));
+        }
+        percentageSlider.setValue((int) config.getResizePercentage());
+        percentageLabel.setText((int) config.getResizePercentage() + "%");
+        
+        // 更新尺寸调整控件状态
+        updateResizeControls();
+    }
+    
+    /**
+     * 加载上次配置或默认模板
+     */
+    private void loadLastConfig() {
+        // 首先尝试加载上次的配置
+        WatermarkConfig lastConfig = templateService.loadLastConfig();
+        if (lastConfig != null) {
+            loadConfigToUI(lastConfig);
+            return;
+        }
+        
+        // 如果没有上次配置，尝试加载默认模板
+        WatermarkConfig defaultConfig = templateService.loadDefaultTemplate();
+        if (defaultConfig != null) {
+            loadConfigToUI(defaultConfig);
+        }
+    }
+    
+    /**
+     * 保存当前配置以便下次启动时加载
+     */
+    private void saveLastConfigOnExit() {
+        updateConfigFromUI();
+        templateService.saveLastConfig(config);
+    }
+    
+    /**
+     * 重写窗口关闭事件以保存配置
+     */
+    @Override
+    public void setDefaultCloseOperation(int operation) {
+        super.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                saveLastConfigOnExit();
+                System.exit(0);
+            }
+        });
     }
 
     /**
