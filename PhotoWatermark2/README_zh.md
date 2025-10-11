@@ -117,16 +117,3 @@ java -jar target/PhotoWatermark2-1.0-SNAPSHOT-shaded.jar
 ### 依赖
 - [Gson](https://github.com/google/gson)：用于JSON序列化和反序列化配置文件
 
-## 开发计划
-
-- [x] 基本文件导入导出功能
-- [x] 文本水印支持
-- [x] 图片水印支持
-- [x] 水印位置设置
-- [x] 水印旋转功能
-- [ ] 完善的手动拖拽水印定位
-- [ ] 完整的配置模板管理界面
-- [ ] 更多高级功能（阴影、描边等）
-- [ ] 国际化支持
-
-
