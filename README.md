@@ -2,7 +2,6 @@
 
 一个基于Java Swing的照片水印添加工具，支持文本水印和图片水印，具有直观的用户界面和丰富的功能。
 
-![主界面](PhotoWatermark2/screenshots/main_interface.png)
 
 ## 功能特性
 
@@ -49,14 +48,18 @@ cd PhotoWatermark2
 mvn clean package
 ```
 
+构建完成后会在`PhotoWatermark2/target/`目录下生成可执行的JAR文件。
+
 ### 运行应用程序
 
+有几种方式可以运行该应用程序：
+
+1. 直接运行主类：
 ```bash
 mvn exec:java -Dexec.mainClass="org.example.SwingMainApp"
 ```
 
-或者使用生成的jar文件运行：
-
+2. 使用生成的jar文件运行：
 ```bash
 java -jar PhotoWatermark2/target/PhotoWatermark2-1.0-SNAPSHOT-shaded.jar
 ```
