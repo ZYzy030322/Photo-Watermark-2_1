@@ -2,29 +2,23 @@
 <launch4jConfig>
   <dontWrapJar>false</dontWrapJar>
   <headerType>gui</headerType>
-  <jar>PhotoWatermark2-1.0-SNAPSHOT-shaded.jar</jar>
-  <outfile>D:\Personal\研一上\大模型\PhotoWatermark2\PhotoWatermark2\watermark2.exe</outfile>
+  <jar>D:\Personal\研一上\大模型\PhotoWatermark2_1\PhotoWatermark2\target\PhotoWatermark2-1.0-SNAPSHOT-shaded.jar</jar>
+  <outfile>D:\Personal\研一上\大模型\PhotoWatermark2_1\PhotoWatermark2\PhotoWatermark2.exe</outfile>
   <errTitle></errTitle>
   <cmdLine></cmdLine>
   <chdir>.</chdir>
   <priority>normal</priority>
-  <downloadUrl>https://www.oracle.com/java/technologies/downloads/#jdk21-windows</downloadUrl>
+  <downloadUrl></downloadUrl>
   <supportUrl></supportUrl>
   <stayAlive>false</stayAlive>
   <restartOnCrash>false</restartOnCrash>
   <manifest></manifest>
   <icon></icon>
   <jre>
-    <path></path>
+    <path>%JAVA_HOME%;%PATH%</path>
     <requiresJdk>false</requiresJdk>
     <requires64Bit>false</requires64Bit>
-    <minVersion>21</minVersion>
+    <minVersion></minVersion>
     <maxVersion></maxVersion>
   </jre>
-  <messages>
-    <startupErr>启动时出现错误。</startupErr>
-    <bundledJreErr>此应用程序需要Java运行时环境。</bundledJreErr>
-    <jreVersionErr>请安装Java 21或更高版本。</jreVersionErr>
-    <launcherErr>启动器出现错误。</launcherErr>
-  </messages>
 </launch4jConfig>
